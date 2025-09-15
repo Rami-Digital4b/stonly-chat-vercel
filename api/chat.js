@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   }
 
   // Domain restriction: only allow requests from your Stonly page
-  const ALLOWED_ORIGIN = "https://help.spoc.biz";
+  const ALLOWED_ORIGIN = "https://help.spoc.biz/kb/fr/";
   const requestOrigin = req.headers.origin || req.headers.referer || "";
   if (!requestOrigin.startsWith(ALLOWED_ORIGIN)) {
     return res.status(403).json({ error: "Forbidden — invalid origin" });
