@@ -2,7 +2,7 @@ export const config = {
   runtime: "edge",
 };
 
-const allowedOrigin = "https://help.spoc.biz/"; // 👈 change this!
+const allowedOrigin = "https://help.spoc.biz"; // 👈 change this!
 
 export default async function handler(req) {
   const origin = req.headers.get("origin");
