@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         "Authorization": `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
         messages: req.body.messages,
       }),
     });
