@@ -1,34 +1,76 @@
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+export const config = {
+  runtime: "edge",
+};
+
+const allowedOrigin = "https://help.spoc.biz/"; // 👈 change this!
+
+export default async function handler(req) {
+  const origin = req.headers.get("origin");
+  const corsHeaders = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": allowedOrigin,
+  };
+
+  // Handle OPTIONS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        ...corsHeaders,
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
   }
 
-  // Domain restriction: only allow requests from your Stonly page
- // const ALLOWED_ORIGIN = "https://help.spoc.biz";
-//  const requestOrigin = req.headers.origin || req.headers.referer || "";
- // if (!requestOrigin.startsWith(ALLOWED_ORIGIN)) {
-  //  return res.status(403).json({ error: "Forbidden — invalid origin" });
- // }
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: corsHeaders,
+    });
+  }
+
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+      status: 400,
+      headers: corsHeaders,
+    });
+  }
+
+  const messages = body.messages;
+  if (!messages) {
+    return new Response(JSON.stringify({ error: "Missing 'messages' field" }), {
+      status: 400,
+      headers: corsHeaders,
+    });
+  }
 
   try {
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    if (!OPENAI_API_KEY) return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
-
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: req.body.messages,
+        messages,
       }),
     });
 
     const data = await response.json();
-    return res.status(response.status).json(data);
+
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: corsHeaders,
+    });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: corsHeaders,
+    });
   }
 }
